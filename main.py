@@ -55,6 +55,7 @@ for event in longpoll.listen():
             char_class = character_sheets[user_id]["class"]
             response = create_character(user_id, name, race, char_class)
             send_message(peer_id, response)
+            character_sheets = load_characters()
             clear_user_state(user_id)
 
         elif state == "choosing_stat":
