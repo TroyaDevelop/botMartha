@@ -113,5 +113,6 @@ for event in longpoll.listen():
             send_message(peer_id, response)
 
         else:
-            send_message(peer_id, f"Извините, господин {user_name}, я не понимаю о чём вы!")
+            #Условие если команда не найдена.
+            pass
 
