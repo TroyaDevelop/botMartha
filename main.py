@@ -24,7 +24,7 @@ for event in longpoll.listen():
         peer_id = message["peer_id"]
         user_id = message["from_id"]
 
-        user_name = get_user_name(user_id)  # Получаем имя пользователя
+        user_name = get_user_name(user_id)  # Получаем имя пользователя дальнейшего использования
         state = get_user_state(user_id)  # Получаем текущее состояние пользователя
 
         # Пошаговое создание персонажа
@@ -81,7 +81,7 @@ for event in longpoll.listen():
 
         if "/" in text:
             roll_command = text.split("/", 1)[1]  # Получаем команду после "/"
-            result = calculate_roll(roll_command)
+            result = calculate_roll(user_name, roll_command)
             send_message(peer_id, result)
 
         # Обработка команд от пользователя, если он не в процессе создания персонажа
