@@ -11,7 +11,7 @@ from utils import stat_map
 
 # Создание сессии VK
 vk_session = vk_api.VkApi(token=token)
-longpoll = VkBotLongPoll(vk_session, group_id=group_id)
+longpoll = VkBotLongPoll(vk_session, group_id=group_id, wait=60)
 vk = vk_session.get_api()
 character_sheets = load_characters()
 
