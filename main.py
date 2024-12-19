@@ -24,7 +24,7 @@ for event in longpoll.listen():
         peer_id = message["peer_id"]
         user_id = message["from_id"]
 
-        user_name = get_user_name(user_id)  # Получаем имя пользователя
+        user_name = get_user_name(user_id)  # Получаем имя пользователя дальнейшего использования
         state = get_user_state(user_id)  # Получаем текущее состояние пользователя
 
         # Пошаговое создание персонажа
