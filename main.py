@@ -79,8 +79,8 @@ for event in longpoll.listen():
                 # Убираем пользователя из user_states после обработки
                 del user_states[user_id]  # Сбрасываем состояние, чтобы избежать бесконечного цикла
 
-        if "/" in text:
-            roll_command = text.split("/", 1)[1]  # Получаем команду после "/"
+        if "марта" in text:
+            roll_command = text.split("марта", 1)[1]  # Получаем команду после "/"
             result = calculate_roll(user_name, roll_command)
             send_message(peer_id, result)
 

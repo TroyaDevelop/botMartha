@@ -134,11 +134,11 @@ def calculate_roll(username, command: str) -> str:
         # Формируем сообщение о результатах
         if dice_count == 1 and dice_sides == 20:
             crit = "Критический успех!" if rolls[0] == 20 else "Критический провал!" if rolls[0] == 1 else ""
-            message += f"{user_mame} Результат броска: {rolls[0]}. {crit}\n"
+            message += f"{user_mame}, Результат броска: {rolls[0]}. {crit}\n"
         elif dice_count >= 2:
-            message += f"{user_mame} Результаты бросков: {rolls_str}.\n"
+            message += f"{user_mame}, Результаты бросков: {rolls_str}.\n"
         else:
-            message += f"{user_mame} Результат броска: {rolls[0]}\n"
+            message += f"{user_mame}, Результат броска: {rolls[0]}\n"
 
         total = sum(rolls) + modifier_value
         modifier_expression = " ".join(modifier_steps)
