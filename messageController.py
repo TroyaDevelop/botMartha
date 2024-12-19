@@ -126,22 +126,18 @@ def calculate_roll(username, command: str) -> str:
 
         # Выполняем бросок кубиков
         rolls = roll_dice(dice_sides, dice_count)
-        rolls_str = ", ".join(map(str, rolls))
+        rolls_str = " + ".join(map(str, rolls))
 
         # Рассчитываем итоговый модификатор
         modifier_value = sum(modifiers)
 
-        total = sum(rolls) + modifier_value
-        modifier_expression = " ".join(modifier_steps)
-        message += f"{user_mame}, Итог: {sum(rolls)} {modifier_expression} = {total}.\n"
         # Формируем сообщение о результатах
         if dice_count == 1 and dice_sides == 20:
-            crit = "Критический успех!" if rolls[0] == 20 else "Критический провал!" if rolls[0] == 1 else ""
-            message += f"Результат броска: {rolls[0]}. {crit}\n"
-        elif dice_count >= 2:
-            message += f"Результаты бросков: {rolls_str}.\n"
-        else:
-            message += f"Результат броска: {rolls[0]}\n"
+            message += "Критический успех!\n" if rolls[0] == 20 else "Критический провал!\n" if rolls[0] == 1 else ""
+
+        total = sum(rolls) + modifier_value
+        modifier_expression = " ".join(modifier_steps)
+        message += f"{user_mame}, Итог: {total}. ({rolls_str} {modifier_expression})\n"
 
     return message
 
