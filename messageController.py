@@ -22,6 +22,12 @@ def roll_dice(sides, rolls=1):
     results = [random.randint(1, sides) for _ in range(rolls)]
     return results
 
+def is_fox(username): #Специально для лисы
+    if username == "Moonlight":
+        return "Лисичка"
+    else:
+        return username
+
 
 help_message = (
     "Здравствуй, авантюрист! Я помогу тебе разобраться с системой бросков кубиков:\n\n"
@@ -49,6 +55,7 @@ def calculate_roll(username, command: str) -> str:
     commands = command.splitlines()
 
     message = ""
+    user_mame = is_fox(username)
 
     for cmd in commands:
         cmd = cmd.strip()
@@ -58,7 +65,7 @@ def calculate_roll(username, command: str) -> str:
         # Разделяем команду на отдельные элементы (например, "2д6+3")
         split_index = cmd.find("д")
         if split_index == -1:
-            message += f"Некорректная команда, {username}. Убедитесь в правильности формата, например: /д20+5.\n"
+            message += f"Некорректная команда, {user_mame}. Убедитесь в правильности формата, например: /д20+5.\n"
             continue
 
         # Извлекаем количество кубиков и граней
@@ -69,7 +76,7 @@ def calculate_roll(username, command: str) -> str:
         dice_count = int(dice_count_str) if dice_count_str.isdigit() else 1
 
         if dice_count > 100:
-            message += f"Слишком большое количество кубиков, {username}."
+            message += f"Слишком большое количество кубиков, {user_mame}."
             continue
 
         # Разделяем оставшуюся часть команды на грани и модификаторы
@@ -103,18 +110,18 @@ def calculate_roll(username, command: str) -> str:
 
         # Проверяем корректность количества граней
         if not dice_sides_str.isdigit():
-            message += f"Некорректное количество граней в команде, {username}.\n"
+            message += f"Некорректное количество граней в команде, {user_mame}.\n"
             continue
 
         dice_sides = int(dice_sides_str)
 
         if dice_sides > 10000:
-            message += f"Слишком большое количество граней, {username}."
+            message += f"Слишком большое количество граней, {user_mame}."
             continue
 
         # Проверяем положительность значений
         if dice_count <= 0 or dice_sides <= 0:
-            message += f"Количество кубиков и граней должно быть положительным числом в команде, {username}.\n"
+            message += f"Количество кубиков и граней должно быть положительным числом в команде, {user_mame}.\n"
             continue
 
         # Выполняем бросок кубиков
@@ -127,11 +134,11 @@ def calculate_roll(username, command: str) -> str:
         # Формируем сообщение о результатах
         if dice_count == 1 and dice_sides == 20:
             crit = "Критический успех!" if rolls[0] == 20 else "Критический провал!" if rolls[0] == 1 else ""
-            message += f"{username} Результат броска: {rolls[0]}. {crit}\n"
+            message += f"{user_mame} Результат броска: {rolls[0]}. {crit}\n"
         elif dice_count >= 2:
-            message += f"{username} Результаты бросков: {rolls_str}.\n"
+            message += f"{user_mame} Результаты бросков: {rolls_str}.\n"
         else:
-            message += f"{username} Результат броска: {rolls[0]}\n"
+            message += f"{user_mame} Результат броска: {rolls[0]}\n"
 
         total = sum(rolls) + modifier_value
         modifier_expression = " ".join(modifier_steps)
