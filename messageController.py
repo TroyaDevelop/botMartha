@@ -96,7 +96,7 @@ def calculate_roll(username, command: str) -> str:
                     else:
                         value = int(current_value) if current_sign == "+" else -int(current_value)
                         modifiers.append(value)
-                        modifier_steps.append(f"{current_sign}{current_value}")
+                        modifier_steps.append(f"{current_sign} {current_value}")
                     current_value = ""
                 current_sign = char
 
@@ -106,7 +106,7 @@ def calculate_roll(username, command: str) -> str:
             else:
                 value = int(current_value) if current_sign == "+" else -int(current_value)
                 modifiers.append(value)
-                modifier_steps.append(f"{current_sign}{current_value}")
+                modifier_steps.append(f"{current_sign} {current_value}")
 
         # Проверяем корректность количества граней
         if not dice_sides_str.isdigit():
@@ -131,18 +131,17 @@ def calculate_roll(username, command: str) -> str:
         # Рассчитываем итоговый модификатор
         modifier_value = sum(modifiers)
 
+        total = sum(rolls) + modifier_value
+        modifier_expression = " ".join(modifier_steps)
+        message += f"{user_mame}, Итог: {sum(rolls)} {modifier_expression} = {total}.\n"
         # Формируем сообщение о результатах
         if dice_count == 1 and dice_sides == 20:
             crit = "Критический успех!" if rolls[0] == 20 else "Критический провал!" if rolls[0] == 1 else ""
-            message += f"{user_mame}, Результат броска: {rolls[0]}. {crit}\n"
+            message += f"Результат броска: {rolls[0]}. {crit}\n"
         elif dice_count >= 2:
-            message += f"{user_mame}, Результаты бросков: {rolls_str}.\n"
+            message += f"Результаты бросков: {rolls_str}.\n"
         else:
-            message += f"{user_mame}, Результат броска: {rolls[0]}\n"
-
-        total = sum(rolls) + modifier_value
-        modifier_expression = " ".join(modifier_steps)
-        message += f" Итог: {sum(rolls)} {modifier_expression} = {total}.\n"
+            message += f"Результат броска: {rolls[0]}\n"
 
     return message
 
