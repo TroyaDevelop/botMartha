@@ -57,6 +57,9 @@ def calculate_roll(username, command: str) -> str:
     message = ""
     user_mame = is_fox(username)
 
+    if not commands:
+        message += f"Да, {user_mame}?"
+
     for cmd in commands:
         cmd = cmd.strip()
         if not cmd:
@@ -126,12 +129,11 @@ def calculate_roll(username, command: str) -> str:
 
         # Выполняем бросок кубиков
         rolls = roll_dice(dice_sides, dice_count)
-        rolls_str = " + ".join(map(str, rolls))
+        rolls_str = " +".join(map(str, rolls))
 
         # Рассчитываем итоговый модификатор
         modifier_value = sum(modifiers)
 
-        # Формируем сообщение о результатах
         if dice_count == 1 and dice_sides == 20:
             message += "Критический успех!\n" if rolls[0] == 20 else "Критический провал!\n" if rolls[0] == 1 else ""
 
