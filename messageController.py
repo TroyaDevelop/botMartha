@@ -129,7 +129,7 @@ def calculate_roll(username, command: str) -> str:
 
         # Выполняем бросок кубиков
         rolls = roll_dice(dice_sides, dice_count)
-        rolls_str = " +".join(map(str, rolls))
+        rolls_str = " + ".join(map(str, rolls))
 
         # Рассчитываем итоговый модификатор
         modifier_value = sum(modifiers)
@@ -139,7 +139,7 @@ def calculate_roll(username, command: str) -> str:
 
         total = sum(rolls) + modifier_value
         modifier_expression = " ".join(modifier_steps)
-        message += f"{user_mame}, Итог: {total}. ({rolls_str} {modifier_expression})\n"
+        message += f"{user_mame}, Итог: {total}. ({rolls_str}{modifier_expression})\n"
 
     return message
 
