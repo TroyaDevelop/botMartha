@@ -1,3 +1,3 @@
-token = "vk1.a.m1-XuRkyaxfQ0Y-srGvEaysGGfAjUjq6hnzWT5OpWVvEiixU_Uc1f5Wm_L-BUJYyHCd40YHAqBbcFNYcgJ3hqUAhG_jLKq0etn0z7_A0zyDdKh4kmK2xCKmiRWkd3LSsnw1mLp6YqhJw-cOrfj82Bfv_COLlicjJMWxEB4Q2xO369rQwq2Py4xP2ZZmNsjVujHc4ittD9AcX5LWzqpBRwA"
-group_id = "228165923"
+token = "vk1.a.BT6y4L2iTs_3IMR9m5YPuYUPVFR_R6LHT_Vw89mff-jmEY37n4e2wCG8U9AXTe0GA-8R7bv7rc1mOSD0TR7dylaouU9wUc9V3qZBcIR60euacOGXaMKogCndLPv7oXN1SARmZD840NM4o3tEBIImLOOKyig0aGDQMMEzdP-3IJY4347rMju_KmfYQIppI7a5-GoIQtpZnum59WQxgPbJlg"
+group_id = "228165918"
 editable_stats = ["strength", "dexterity", "intelligence", "wisdom", "charisma", "constitution"]
