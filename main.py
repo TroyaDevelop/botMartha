@@ -90,10 +90,10 @@ for event in longpoll.listen():
 
         # Обработка команд от пользователя, если он не в процессе создания персонажа
         elif text == "привет":
-            send_message(peer_id, f"Здравствуйте, господин {user_name}! Чем могу помочь?")
+            send_message(peer_id, f"Здравствуйте, {user_name}! Чем могу помочь?")
 
         elif text == "пока":
-            send_message(peer_id, f"Удачи вам, господин {user_name}!")
+            send_message(peer_id, f"Удачи вам, {user_name}!")
 
         elif text == "помощь":
                 send_message(peer_id, help_message)

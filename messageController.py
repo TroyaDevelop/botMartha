@@ -139,7 +139,12 @@ def calculate_roll(username, command: str) -> str:
 
         total = sum(rolls) + modifier_value
         modifier_expression = " ".join(modifier_steps)
-        message += f"{user_mame}, Итог: {total}. ({rolls_str}{modifier_expression})\n"
+        if modifier_expression == '' and dice_count == 1:
+            message += f"{user_mame}, Итог: {total}.\n"
+        elif modifier_expression == '' and dice_count > 1:
+            message += f"{user_mame}, Итог: {total}. ({rolls_str})\n"
+        else:
+            message += f"{user_mame}, Итог: {total}. ({rolls_str} {modifier_expression})\n"
 
     return message
 
