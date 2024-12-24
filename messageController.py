@@ -129,13 +129,17 @@ def calculate_roll(username, command: str) -> str:
 
         # Выполняем бросок кубиков
         rolls = roll_dice(dice_sides, dice_count)
-        rolls_str = " + ".join(map(str, rolls))
+        crit_rolls = [
+            f"{roll}💥" if roll == 20 else f"{roll}💀" if roll == 1 else str(roll)
+            for roll in rolls
+        ]
+        rolls_str = " + ".join(crit_rolls)
 
         # Рассчитываем итоговый модификатор
         modifier_value = sum(modifiers)
 
         if dice_count == 1 and dice_sides == 20:
-            message += "Критический успех!\n" if rolls[0] == 20 else "Критический провал!\n" if rolls[0] == 1 else ""
+            message += "Критический успех!💥\n" if rolls[0] == 20 else "Критический провал!💀\n" if rolls[0] == 1 else ""
 
         total = sum(rolls) + modifier_value
         modifier_expression = " ".join(modifier_steps)
