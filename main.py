@@ -5,7 +5,8 @@ from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, editable_stats, group_id
 from messageController import send_message, get_user_name, help_message, calculate_roll
-from characterController import create_character, update_character_stat, show_character, load_characters
+from characterController import create_character, update_character_stat, show_character, load_characters, showInv, \
+    updateInv, delInv
 from states import set_user_state, get_user_state, clear_user_state, user_states
 from utils import stat_map
 
@@ -79,6 +80,43 @@ for event in longpoll.listen():
                 # Убираем пользователя из user_states после обработки
                 del user_states[user_id]  # Сбрасываем состояние, чтобы избежать бесконечного цикла
 
+        elif state == "awaiting_inventory_item":
+            parts = text.split(",", maxsplit=1)  # Разделяем строку на две части через запятую
+            if len(parts) < 2:
+                send_message(peer_id,
+                             "Пожалуйста, укажите название предмета и его количество через запятую (например: 'зелье лечения, 2').")
+            else:
+                item_name = parts[0].strip()  # Убираем лишние пробелы вокруг названия
+                try:
+                    quantity = int(parts[1].strip())  # Преобразуем вторую часть в число
+                    if quantity <= 0:
+                        send_message(peer_id, "Количество должно быть положительным числом.")
+                    else:
+                        response = updateInv(user_id, item_name, quantity)
+                        send_message(peer_id, response)
+                except ValueError:
+                    send_message(peer_id, "Количество должно быть числом. Попробуйте снова.")
+            clear_user_state(user_id)  # Очищаем состояние после обработки ввода
+
+        elif state == "awaiting_inventory_removal":
+            parts = text.split(",", maxsplit=1)  # Разделяем строку на две части через запятую
+            if len(parts) < 2:
+                send_message(peer_id,
+                             "Пожалуйста, укажите название предмета и его количество для удаления через запятую (например: 'зелье лечения, 1').")
+            else:
+                item_name = parts[0].strip()  # Убираем лишние пробелы вокруг названия
+                try:
+                    quantity = int(parts[1].strip())  # Преобразуем вторую часть в число
+                    if quantity <= 0:
+                        send_message(peer_id, "Количество должно быть положительным числом.")
+                    else:
+                        response = delInv(user_id, item_name, quantity)
+                        send_message(peer_id, response)
+                except ValueError:
+                    send_message(peer_id, "Количество должно быть числом. Попробуйте снова.")
+
+            clear_user_state(user_id)  # Очищаем состояние после обработки ввода
+
         if "марта" in text:
             roll_command = text.split("марта", 1)[1].strip()  # Убираем лишние пробелы
             result = calculate_roll(user_name, roll_command)
@@ -97,6 +135,25 @@ for event in longpoll.listen():
 
         elif text == "помощь":
                 send_message(peer_id, help_message)
+
+        elif text == "инв":
+            inv = showInv(user_id)
+            send_message(peer_id, inv)
+
+        elif text == "инв доб":
+            if str(user_id) not in character_sheets:
+                send_message(peer_id, "Сначала создайте персонажа.")
+            else:
+                set_user_state(user_id, "awaiting_inventory_item")
+                send_message(peer_id, "Введите название предмета и его количество (например: 'меч, 2').")
+
+        elif text == "инв удал":
+            if str(user_id) not in character_sheets:
+                send_message(peer_id, "Сначала создайте персонажа.")
+            else:
+                set_user_state(user_id, "awaiting_inventory_removal")
+                send_message(peer_id,
+                             "Введите название предмета и его количество для удаления через запятую (например: 'зелье лечения, 1').")
 
         elif text == "хочу стать авантюристом":
             if str(user_id) in character_sheets:

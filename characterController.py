@@ -1,4 +1,6 @@
 import json
+from logging.config import valid_ident
+
 from config import editable_stats
 from utils import stat_map, calculate_modifier
 
@@ -17,6 +19,7 @@ def create_character(user_id, name, race, char_class):
         "intelligence": 10,
         "wisdom": 10,
         "charisma": 10,
+        "inventory": [],
     }
     save_characters()
     return f"Добро пожаловать в гильдию авантюристов, господин {name}."
@@ -64,6 +67,68 @@ def show_character(user_id):
         f"Мудрость: {wisdom} ({calculate_modifier(wisdom):+})\n"
         f"Харизма: {charisma} ({calculate_modifier(charisma):+})"
 )
+
+
+def updateInv(user_id, item_name, quantity):
+    character = character_sheets.get(str(user_id))
+    if not character:
+        return "К сожалению, вы не состоите в гильдии авантюристов."
+
+    inventory = character["inventory"]
+
+    # Проверка на существование предмета в инвентаре
+    for item in inventory:
+        if item["item"].lower() == item_name.lower():  # Сравнение без учёта регистра
+            item["quantity"] += quantity  # Увеличиваем количество
+            save_characters()
+            return f"Добавлено {quantity}x '{item_name}' в инвентарь."
+
+    # Если предмет не найден, добавляем новый
+    inventory.append({"item": item_name, "quantity": quantity})
+    save_characters()
+    return f"Добавлено {quantity}x '{item_name}' в инвентарь."
+
+
+def showInv(user_id):
+    character = character_sheets.get(str(user_id))
+    if not character:
+        return "К сожалению, вы не состоите в гильдии авантюристов."
+    try:
+        inventory = character["inventory"]
+        if len(inventory) == 0:
+            return "Инвентарь пуст."
+        else:
+            return "\n".join([f"{item['item']} ({item['quantity']} шт.)" for item in inventory])
+    except ValueError:
+        return "Не удалось получить инвентарь."
+
+
+def delInv(user_id, item_name, quantity):
+    character = character_sheets.get(str(user_id))
+    if not character:
+        return "К сожалению, вы не состоите в гильдии авантюристов."
+
+    inventory = character["inventory"]
+    item_found = False
+
+    for item in inventory:
+        if item["item"].lower() == item_name.lower():  # Сравнение без учёта регистра
+            item_found = True
+            if item["quantity"] >= quantity:
+                item["quantity"] -= quantity
+                if item["quantity"] == 0:
+                    inventory.remove(item)  # Удаление предмета, если его количество стало 0
+                save_characters()
+                return f"Удалено {quantity}x '{item_name}' из инвентаря."
+            else:
+                return f"В вашем инвентаре недостаточно {item_name}. Доступно: {item['quantity']}."
+
+    if not item_found:
+        return f"Предмет '{item_name}' не найден в вашем инвентаре."
+
+    save_characters()  # Сохраняем изменения после удаления
+    return "Ошибка при удалении предмета из инвентаря."
+
 
 def load_characters(filename="characters.json"):
     global character_sheets
