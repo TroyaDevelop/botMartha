@@ -9,8 +9,8 @@ MAX_DICE_COUNT = 100
 MAX_DICE_SIDES = 100
 
 # Эмодзи для критических бросков 20-гранных кубиков и модификатора
-CRIT_FAIL_EMOJI = "☠️"
-CRIT_SUCCESS_EMOJI = "💥"
+CRIT_FAIL_EMOJI = "😱"
+CRIT_SUCCESS_EMOJI = "🎉"
 GEAR_EMOJI = "⚙️"
 
 # Инициализация сессии и API ВКонтакте
@@ -65,13 +65,23 @@ def calculate_roll(username: str, command: str) -> str:
         return f"Да, {display_name}?"
 
     # Регулярное выражение для парсинга команды броска кубиков.
-    dice_pattern = re.compile(r'(?P<count>\d*)д(?P<sides>\d+)((?P<modifiers>([+-]\d+)+))?')
+    dice_pattern = re.compile(
+        r'^(?P<count>\d*)д(?P<sides>\d+)((?P<modifiers>([+-]\d+)+))?$'
+    )
     modifier_pattern = re.compile(r'([+-]\d+)')
 
-    # Ищем все команды бросков кубиков в тексте
-    matches = dice_pattern.finditer(normalized_command)
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
 
-    for match in matches:
+        # Удаляем ведущий слеш, если он присутствует
+        line_clean = line.lstrip('/')
+        match = dice_pattern.fullmatch(line_clean)
+        if not match:
+            results.append(f"Некорректная команда, {display_name}. Пример: /д20+5.")
+            continue
+
         # Определяем количество кубиков (если не указано, то 1)
         count_str = match.group('count')
         dice_count = int(count_str) if count_str.isdigit() else 1
@@ -111,29 +121,32 @@ def calculate_roll(username: str, command: str) -> str:
 
         # Если сумма результата и модификаторов <= 0, выводим "Выпала 1"
         if total <= 0:
-            roll_detail = " + ".join([str(roll) for roll in roll_results])  # Добавляем подробности о броске
-            results.append(f"{display_name}, выпала 1. ({roll_detail}{modifier_display})")
+            results.append(f"{display_name}, выпала 1. ({modifier_display})")
             continue
 
-        # Формируем детализированный вывод для каждого кубика
-        detailed_rolls = []
-        for roll in roll_results:
-            if roll == 1:
-                detailed_rolls.append(f"{roll}{CRIT_FAIL_EMOJI}")
-            elif roll == 20 and dice_sides == 20:
-                detailed_rolls.append(f"{roll}{CRIT_SUCCESS_EMOJI}")
+        # Специальная обработка для 20-гранного кубика
+        if dice_sides == 20:
+            if dice_count == 1:
+                roll = roll_results[0]
+                if roll == 1:
+                    roll_detail = f"Критический провал {CRIT_FAIL_EMOJI}"
+                elif roll == 20:
+                    roll_detail = f"Критический успех {CRIT_SUCCESS_EMOJI}"
+                else:
+                    roll_detail = str(roll)
             else:
-                detailed_rolls.append(str(roll))
+                detailed_rolls = []
+                for roll in roll_results:
+                    if roll == 1:
+                        detailed_rolls.append(f"{roll}{CRIT_FAIL_EMOJI}")
+                    elif roll == 20:
+                        detailed_rolls.append(f"{roll}{CRIT_SUCCESS_EMOJI}")
+                    else:
+                        detailed_rolls.append(str(roll))
+                roll_detail = " + ".join(detailed_rolls)
+        else:
+            roll_detail = " + ".join(map(str, roll_results))
 
-        # Выводим итоговый результат всех кубиков
-        roll_detail = " + ".join(detailed_rolls)
-        results.append(f"{display_name}, итог: {total}. ({roll_detail}{modifier_display})")
-
-    # Если команды не найдены, выводим ошибку
-    if not results:
-        return f"{display_name}, в твоём сообщении не найдено команды для броска."
+        results.append(f"{display_name}, Итог: {total}. ({roll_detail}{modifier_display})")
 
     return "\n".join(results)
-
-
-
