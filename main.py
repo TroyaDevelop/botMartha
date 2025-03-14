@@ -142,43 +142,43 @@ for event in longpoll.listen():
         elif text == "анекдот":
             send_message(peer_id, get_random_joke())
 
-        elif text == "инв":
-            inv = showInv(user_id)
-            send_message(peer_id, inv)
+        # elif text == "инв":
+        #     inv = showInv(user_id)
+        #     send_message(peer_id, inv)
 
-        elif text == "инв доб":
-            if str(user_id) not in character_sheets:
-                send_message(peer_id, "Сначала создайте персонажа.")
-            else:
-                set_user_state(user_id, "awaiting_inventory_item")
-                send_message(peer_id, "Введите название предмета и его количество (например: 'меч, 2').")
+        # elif text == "инв доб":
+        #     if str(user_id) not in character_sheets:
+        #         send_message(peer_id, "Сначала создайте персонажа.")
+        #     else:
+        #         set_user_state(user_id, "awaiting_inventory_item")
+        #         send_message(peer_id, "Введите название предмета и его количество (например: 'меч, 2').")
 
-        elif text == "инв удал":
-            if str(user_id) not in character_sheets:
-                send_message(peer_id, "Сначала создайте персонажа.")
-            else:
-                set_user_state(user_id, "awaiting_inventory_removal")
-                send_message(peer_id,
-                             "Введите название предмета и его количество для удаления через запятую (например: 'зелье лечения, 1').")
+        # elif text == "инв удал":
+        #     if str(user_id) not in character_sheets:
+        #         send_message(peer_id, "Сначала создайте персонажа.")
+        #     else:
+        #         set_user_state(user_id, "awaiting_inventory_removal")
+        #         send_message(peer_id,
+        #                      "Введите название предмета и его количество для удаления через запятую (например: 'зелье лечения, 1').")
 
-        elif text == "хочу стать авантюристом":
-            if str(user_id) in character_sheets:
-                send_message(peer_id, "Вы уже состоите в гильдии авантюристов!")
-            else:
-                set_user_state(user_id, "awaiting_name")
-                send_message(peer_id, "Отлично! Как вас зовут?")
+        # elif text == "хочу стать авантюристом":
+        #     if str(user_id) in character_sheets:
+        #         send_message(peer_id, "Вы уже состоите в гильдии авантюристов!")
+        #     else:
+        #         set_user_state(user_id, "awaiting_name")
+        #         send_message(peer_id, "Отлично! Как вас зовут?")
 
-        elif text == "изменить характеристику":
-            character = character_sheets.get(str(user_id))
-            if not character:
-                send_message(peer_id, "К сожалению, вы не состоите в гильдии авантюристов.")
-            else:
-                set_user_state(user_id, "choosing_stat")
-                send_message(peer_id, "Какую характеристику вы хотите изменить? (сила, ловкость, интеллект, мудрость, харизма, телосложение)")
+        # elif text == "изменить характеристику":
+        #     character = character_sheets.get(str(user_id))
+        #     if not character:
+        #         send_message(peer_id, "К сожалению, вы не состоите в гильдии авантюристов.")
+        #     else:
+        #         set_user_state(user_id, "choosing_stat")
+        #         send_message(peer_id, "Какую характеристику вы хотите изменить? (сила, ловкость, интеллект, мудрость, харизма, телосложение)")
 
-        elif text == "покажи мою лицензию":
-            response = show_character(user_id)
-            send_message(peer_id, response)
+        # elif text == "покажи мою лицензию":
+        #     response = show_character(user_id)
+        #     send_message(peer_id, response)
 
         elif text == "дуэль":
             if message.get('reply_message'):
