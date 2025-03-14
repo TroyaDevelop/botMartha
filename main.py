@@ -4,7 +4,7 @@ import vk_api
 from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, editable_stats, group_id
-from messageController import send_message, get_user_name, help_message, calculate_roll
+from messageController import get_random_joke, send_message, get_user_name, help_message, calculate_roll
 from characterController import create_character, update_character_stat, show_character, load_characters, showInv, \
     updateInv, delInv
 from states import set_user_state, get_user_state, clear_user_state, user_states
@@ -21,7 +21,7 @@ for event in longpoll.listen():
     if event.type == VkBotEventType.MESSAGE_NEW:
         # Получаем текст сообщения, peer_id и user_id
         message = event.obj.message
-        text = message["text"].lower()
+        text = message["text"].lower().strip()
         peer_id = message["peer_id"]
         user_id = message["from_id"]
 
@@ -134,7 +134,10 @@ for event in longpoll.listen():
             send_message(peer_id, f"Удачи вам, {user_name}!")
 
         elif text == "помощь":
-                send_message(peer_id, help_message)
+            send_message(peer_id, help_message)
+
+        elif text == "анекдот":
+            send_message(peer_id, get_random_joke())
 
         elif text == "инв":
             inv = showInv(user_id)
@@ -177,4 +180,3 @@ for event in longpoll.listen():
         else:
             #Условие если команда не найдена.
             pass
-

@@ -3,6 +3,7 @@ import re
 import vk_api
 from config import token
 import time
+import json
 
 # Ограничения на количество кубиков и граней
 MAX_DICE_COUNT = 250
@@ -74,6 +75,11 @@ help_message = (
     "Напиши 'помощь', если тебе снова понадобится эта инструкция. Удачи в бросках! 🎲"
 )
 
+def get_random_joke():
+    with open('jokes.json', 'r', encoding='utf-8') as file:
+        jokes = json.load(file)
+    return random.choice(jokes)
+
 def calculate_roll(username: str, command: str) -> str:
     # Нормализуем команду: заменяем альтернативные символы на стандартный "д"
     normalized_command = command.replace("к", "д").replace("d", "д")
@@ -87,6 +93,11 @@ def calculate_roll(username: str, command: str) -> str:
     # Если команда /помощь, возвращаем инструкцию
     if '/помощь' in normalized_command.lower() or 'помощь' in normalized_command.lower():
         return help_message
+
+    # Если команда 'Марта анекдот', возвращаем анекдот
+    if '/анекдот' in normalized_command.lower():
+        joke = get_random_joke()
+        return joke
 
     # Регулярное выражение для парсинга команды броска кубиков.
     dice_pattern = re.compile(r'(?P<count>\d*)д(?P<sides>\d+)((?P<modifiers>([+-]\d+)+))?')
