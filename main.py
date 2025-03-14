@@ -4,12 +4,13 @@ import vk_api
 from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, editable_stats, group_id
-from messageController import get_random_joke, send_message, get_user_name, help_message, calculate_roll
+from messageController import get_last_name, get_random_joke, send_message, get_user_name, help_message, calculate_roll
 from characterController import create_character, update_character_stat, show_character, load_characters, showInv, \
     updateInv, delInv
 from states import set_user_state, get_user_state, clear_user_state, user_states
 from utils import stat_map
 from duelController import DuelController
+from marriageController import marriage_controller
 
 # Создание сессии VK
 vk_session = vk_api.VkApi(token=token)
@@ -191,7 +192,51 @@ for event in longpoll.listen():
             send_message(peer_id, response)
 
         elif text == "выстрел":
-            response = DuelController.handle_shoot_command(user_id)
+            response = DuelController.handle_shoot_command(peer_id, user_id)
+            send_message(peer_id, response)
+
+        elif text == "дуэль стат":
+            stats = DuelController.get_stats(peer_id)
+            if not stats:
+                response = 'Статистика дуэлей пока пуста.'
+            else:
+                response = 'Статистика побед в дуэлях:\n'
+                for user_id, wins in stats.items():
+                    user_name = get_user_name(user_id)
+                    rank = DuelController.get_rank(wins)
+                    response += f'{user_name}: {wins} ({rank})\n'
+            send_message(peer_id, response)
+
+        elif text == "брак":
+            if message.get('reply_message'):
+                response = marriage_controller.propose_marriage(user_id, peer_id, message['reply_message'])
+            else:
+                response = marriage_controller.propose_marriage(user_id, peer_id)
+            send_message(peer_id, response)
+
+        elif text == "принять брак":
+            response = marriage_controller.accept_marriage(user_id)
+            send_message(peer_id, response)
+
+        elif text == "развод":
+            response = marriage_controller.divorce(user_id, peer_id)
+            send_message(peer_id, response)
+
+        elif text == "подтвердить развод":
+            response = marriage_controller.confirm_divorce(user_id)
+            send_message(peer_id, response)
+
+        elif text == "браки":
+            marriages = marriage_controller.get_marriages(peer_id)
+            if not marriages:
+                response = 'В нашей гильдии пока никто не в браке!'
+            else:
+                response = 'Список браков:\n'
+                for pair, data in marriages.items():
+                    id1, id2 = eval(pair)
+                    user1 = get_user_name(id1) + " " + get_last_name(id1)
+                    user2 = get_user_name(id2) + " " + get_last_name(id2)
+                    response += f'{user1} + {user2} (с {data["date"]})\n'
             send_message(peer_id, response)
 
         else:

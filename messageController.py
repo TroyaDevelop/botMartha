@@ -45,6 +45,12 @@ def get_user_name(user_id: int) -> str:
         return user_info[0].get('first_name', "друг")
     return "друг"
 
+def get_last_name(user_id: int) -> str:
+    user_info = vk.users.get(user_ids=user_id)
+    if user_info:
+        return user_info[0].get('last_name', "батькович")
+    return "батькович"
+    
 def biased_roll(sides: int, exponent: float = 0.8) -> int:
     """
     Функция смещенного броска кубика.
