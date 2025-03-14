@@ -1,11 +1,11 @@
-# messages.py
 import random
 import re
 import vk_api
 from config import token
+import time
 
 # Ограничения на количество кубиков и граней
-MAX_DICE_COUNT = 100
+MAX_DICE_COUNT = 250
 MAX_DICE_SIDES = 100
 
 # Эмодзи для критических бросков 20-гранных кубиков и модификатора
@@ -17,14 +17,26 @@ GEAR_EMOJI = "⚙️"
 vk_session = vk_api.VkApi(token=token)
 vk = vk_session.get_api()
 
+MAX_RETRIES = 10  # Количество попыток переподключения
+RETRY_DELAY = 15  # Задержка перед повторной попыткой в секундах
 
 def send_message(peer_id: int, message: str) -> None:
-    vk.messages.send(
-        peer_id=peer_id,
-        message=message,
-        random_id=random.randint(1, 10**6)
-    )
-
+    attempts = 0
+    while attempts < MAX_RETRIES:
+        try:
+            vk.messages.send(
+                peer_id=peer_id,
+                message=message,
+                random_id=random.randint(1, 10**6)
+            )
+            break  # Если сообщение отправлено, выходим из цикла
+        except vk_api.VkApiError as e:
+            attempts += 1
+            if attempts < MAX_RETRIES:
+                print(f"Ошибка при отправке сообщения: {e}. Повторная попытка через {RETRY_DELAY} секунд.")
+                time.sleep(RETRY_DELAY)  # Ждем перед повторной попыткой
+            else:
+                print("Не удалось отправить сообщение после нескольких попыток.")
 
 def get_user_name(user_id: int) -> str:
     user_info = vk.users.get(user_ids=user_id)
@@ -32,14 +44,23 @@ def get_user_name(user_id: int) -> str:
         return user_info[0].get('first_name', "друг")
     return "друг"
 
+def biased_roll(sides: int, exponent: float = 0.8) -> int:
+    """
+    Функция смещенного броска кубика.
+    При exponent < 1 увеличивается шанс выпадения высоких значений.
+    Изменена формула, чтобы при максимально возможном значении r выпадает sides.
+    """
+    r = random.random()  # равномерное число от 0 до 1
+    return int(sides * (r ** exponent)) + 1
 
 def roll_dice(sides: int, rolls: int = 1) -> list[int]:
-    return [random.randint(1, sides) for _ in range(rolls)]
-
+    """
+    Использует biased_roll вместо random.randint для смещения вероятности к большим числам.
+    """
+    return [biased_roll(sides) for _ in range(rolls)]
 
 def is_fox(username: str) -> str:
     return "Лисичка" if username == "Moonlight" else username
-
 
 help_message = (
     "Здравствуй, авантюрист! Я помогу тебе разобраться с системой бросков кубиков:\n\n"
@@ -53,7 +74,6 @@ help_message = (
     "Напиши 'помощь', если тебе снова понадобится эта инструкция. Удачи в бросках! 🎲"
 )
 
-
 def calculate_roll(username: str, command: str) -> str:
     # Нормализуем команду: заменяем альтернативные символы на стандартный "д"
     normalized_command = command.replace("к", "д").replace("d", "д")
@@ -63,6 +83,10 @@ def calculate_roll(username: str, command: str) -> str:
 
     if not lines:
         return f"Да, {display_name}?"
+
+    # Если команда /помощь, возвращаем инструкцию
+    if '/помощь' in normalized_command.lower() or 'помощь' in normalized_command.lower():
+        return help_message
 
     # Регулярное выражение для парсинга команды броска кубиков.
     dice_pattern = re.compile(r'(?P<count>\d*)д(?P<sides>\d+)((?P<modifiers>([+-]\d+)+))?')
@@ -134,6 +158,3 @@ def calculate_roll(username: str, command: str) -> str:
         return f"{display_name}, в твоём сообщении не найдено команды для броска."
 
     return "\n".join(results)
-
-
-
