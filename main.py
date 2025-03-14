@@ -9,12 +9,14 @@ from characterController import create_character, update_character_stat, show_ch
     updateInv, delInv
 from states import set_user_state, get_user_state, clear_user_state, user_states
 from utils import stat_map
+from duelController import DuelController
 
 # Создание сессии VK
 vk_session = vk_api.VkApi(token=token)
 longpoll = VkBotLongPoll(vk_session, group_id=group_id, wait=60)
 vk = vk_session.get_api()
 character_sheets = load_characters()
+duels = {}
 
 # Обработка событий от пользователей
 for event in longpoll.listen():
@@ -84,7 +86,7 @@ for event in longpoll.listen():
             parts = text.split(",", maxsplit=1)  # Разделяем строку на две части через запятую
             if len(parts) < 2:
                 send_message(peer_id,
-                             "Пожалуйста, укажите название предмета и его количество через запятую (например: 'зелье лечения, 2').")
+                             "Пожалуйста, укажите название предмета и его количество через запятую (например: 'меч, 2').")
             else:
                 item_name = parts[0].strip()  # Убираем лишние пробелы вокруг названия
                 try:
@@ -175,6 +177,21 @@ for event in longpoll.listen():
 
         elif text == "покажи мою лицензию":
             response = show_character(user_id)
+            send_message(peer_id, response)
+
+        elif text == "дуэль":
+            if message.get('reply_message'):
+                response = DuelController.handle_duel_command(user_id, message['reply_message'])
+            else:
+                response = DuelController.handle_duel_command(user_id)
+            send_message(peer_id, response)
+
+        elif text == "принять дуэль":
+            response = DuelController.handle_accept_duel(user_id)
+            send_message(peer_id, response)
+
+        elif text == "выстрел":
+            response = DuelController.handle_shoot_command(user_id)
             send_message(peer_id, response)
 
         else:
