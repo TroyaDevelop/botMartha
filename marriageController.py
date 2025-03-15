@@ -1,20 +1,21 @@
 import json
 import time
+import os
 from messageController import get_user_name
 
 class MarriageController:
     def __init__(self):
-        self.marriages = {}
+        self.marriages = self.load_marriages()
         self.pending_proposals = {}
         self.pending_divorces = {}
 
     @staticmethod
     def load_marriages():
-        try:
-            with open('marriages.json', 'r', encoding='utf-8') as file:
-                return json.load(file)
-        except FileNotFoundError:
-            return {}
+        if not os.path.exists('marriages.json'):
+            with open('marriages.json', 'w', encoding='utf-8') as f:
+                json.dump({}, f, ensure_ascii=False, indent=4)
+        with open('marriages.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
 
     @staticmethod
     def save_marriages(marriages):
@@ -22,7 +23,6 @@ class MarriageController:
             json.dump(marriages, file, ensure_ascii=False, indent=4)
 
     def propose_marriage(self, user_id, peer_id, reply_message=None):
-        self.marriages = self.load_marriages()
         if reply_message:
             partner_id = reply_message['from_id']
             if user_id == partner_id:

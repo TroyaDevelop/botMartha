@@ -1,6 +1,7 @@
 import random
 import time
 import json
+import os
 from messageController import get_user_name
 
 class DuelController:
@@ -26,11 +27,11 @@ class DuelController:
 
     @staticmethod
     def load_stats():
-        try:
-            with open('duel_stats.json', 'r', encoding='utf-8') as file:
-                return json.load(file)
-        except FileNotFoundError:
-            return {}
+        if not os.path.exists('duel_stats.json'):
+            with open('duel_stats.json', 'w', encoding='utf-8') as f:
+                json.dump({}, f, ensure_ascii=False, indent=4)
+        with open('duel_stats.json', 'r', encoding='utf-8') as file:
+            return json.load(file)
 
     @staticmethod
     def save_stats(stats):
