@@ -4,7 +4,8 @@ import vk_api
 from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, group_id
-from controllers.messageController import get_random_joke, send_message, get_user_name, help_message, calculate_roll
+from controllers.diceController import calculate_roll
+from controllers.messageController import get_random_joke, send_message, get_user_name, help_message
 from controllers.duelController import DuelController
 from controllers.marriageController import MarriageController
 from controllers.profileController import ProfileController
