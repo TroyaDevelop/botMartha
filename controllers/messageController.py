@@ -4,6 +4,8 @@ import vk_api
 from config import token
 import time
 import json
+from controllers.profileController import ProfileController
+profile_controller = ProfileController()
 
 # Ограничения на количество кубиков и граней
 MAX_DICE_COUNT = 250
@@ -40,16 +42,12 @@ def send_message(peer_id: int, message: str) -> None:
                 print("Не удалось отправить сообщение после нескольких попыток.")
 
 def get_user_name(user_id: int) -> str:
-    user_info = vk.users.get(user_ids=user_id)
-    if user_info:
-        return user_info[0].get('first_name', "друг")
-    return "друг"
-
-def get_last_name(user_id: int) -> str:
-    user_info = vk.users.get(user_ids=user_id)
-    if user_info:
-        return user_info[0].get('last_name', "батькович")
-    return "батькович"
+    nickname = profile_controller.get_nickname(user_id)
+    if nickname:
+        return nickname
+    else:
+        user_info = vk.users.get(user_ids=user_id)
+        return user_info[0].get('first_name', "друг") + " " + user_info[0].get('last_name', "батькович")
     
 def biased_roll(sides: int, exponent: float = 0.8) -> int:
     """
@@ -65,9 +63,6 @@ def roll_dice(sides: int, rolls: int = 1) -> list[int]:
     Использует biased_roll вместо random.randint для смещения вероятности к большим числам.
     """
     return [biased_roll(sides) for _ in range(rolls)]
-
-def is_fox(username: str) -> str:
-    return "Лисичка" if username == "Moonlight" else username
 
 help_message = (
     "Здравствуй, авантюрист! Я помогу тебе разобраться с командами:\n\n"
@@ -90,7 +85,7 @@ dice_help_message = (
 )
 
 def get_random_joke():
-    with open('jokes.json', 'r', encoding='utf-8') as file:
+    with open('data/jokes.json', 'r', encoding='utf-8') as file:
         jokes = json.load(file)
     return random.choice(jokes)
 
@@ -99,7 +94,7 @@ def calculate_roll(username: str, command: str) -> str:
     normalized_command = command.replace("к", "д").replace("d", "д")
     lines = normalized_command.splitlines()
     results = []
-    display_name = is_fox(username)
+    display_name = username
 
     if not lines:
         return f"Да, {display_name}?"

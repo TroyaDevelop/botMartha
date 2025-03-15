@@ -1,7 +1,7 @@
 import json
 import time
 import os
-from messageController import get_user_name
+from controllers.messageController import get_user_name
 
 class MarriageController:
     def __init__(self):
@@ -11,15 +11,15 @@ class MarriageController:
 
     @staticmethod
     def load_marriages():
-        if not os.path.exists('marriages.json'):
-            with open('marriages.json', 'w', encoding='utf-8') as f:
+        if not os.path.exists('data/marriages.json'):
+            with open('data/marriages.json', 'w', encoding='utf-8') as f:
                 json.dump({}, f, ensure_ascii=False, indent=4)
-        with open('marriages.json', 'r', encoding='utf-8') as f:
+        with open('data/marriages.json', 'r', encoding='utf-8') as f:
             return json.load(f)
 
     @staticmethod
     def save_marriages(marriages):
-        with open('marriages.json', 'w', encoding='utf-8') as file:
+        with open('data/marriages.json', 'w', encoding='utf-8') as file:
             json.dump(marriages, file, ensure_ascii=False, indent=4)
 
     def propose_marriage(self, user_id, peer_id, reply_message=None):
@@ -96,5 +96,3 @@ class MarriageController:
     def get_marriages(self, peer_id):
         self.marriages = self.load_marriages()
         return {k: v for k, v in self.marriages.get(str(peer_id), {}).items() if v}
-
-marriage_controller = MarriageController()

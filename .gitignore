@@ -1,5 +1,5 @@
-/characters.json
-/duel_stats.json
-/marriages.json
+/data/duel_stats.json
+/data/marriages.json
+/data/profiles.json
 /config.py
 /__pycache__
