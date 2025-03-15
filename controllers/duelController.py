@@ -48,9 +48,9 @@ class DuelController:
         if str(winner_id) not in stats[str(peer_id)]:
             stats[str(peer_id)][str(winner_id)] = 0
         stats[str(peer_id)][str(winner_id)] += 1
-        profile = profile_controller.get_profile(winner_id)
-        profile['duel_wins'] = profile.get('duel_wins', 0) + 1
-        profile_controller.save_profiles()
+        # profile = profile_controller.get_profile(winner_id)
+        # profile['duel_wins'] = profile.get('duel_wins', 0) + 1
+        # profile_controller.save_profiles()
         DuelController.save_stats(stats)
 
     @staticmethod

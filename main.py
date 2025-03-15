@@ -110,9 +110,9 @@ for event in longpoll.listen():
                     response += f'{user1} + {user2} (с {data["date"]})\n'
             send_message(peer_id, response)
 
-        elif text == "мой профиль":
-            response = profile_controller.get_profile(user_id)
-            send_message(peer_id, response)
+        # elif text == "мой профиль":
+        #     response = profile_controller.get_profile(user_id)
+        #     send_message(peer_id, response)
 
         elif text.startswith("мне ник"):
             nickname = text.split("мне ник", 1)[1].strip()
