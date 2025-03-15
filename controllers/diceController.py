@@ -37,12 +37,12 @@ def roll_dice(sides: int, rolls: int = 1) -> list[int]:
     """
     return [biased_roll(sides) for _ in range(rolls)]
 
-def calculate_roll(username: str, command: str) -> str:
+def calculate_roll(nickname: str, command: str) -> str:
     # Нормализуем команду: заменяем альтернативные символы на стандартный "д"
     normalized_command = command.replace("к", "д").replace("d", "д")
     lines = normalized_command.splitlines()
     results = []
-    display_name = username
+    display_name = nickname
 
     if not lines:
         return f"Да, {display_name}?"
