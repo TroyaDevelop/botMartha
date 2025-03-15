@@ -3,6 +3,7 @@ import os
 
 class ProfileController:
     def __init__(self):
+        # Изначально можно загрузить данные, но при чтении всегда будем обновлять
         self.profiles = self.load_profiles()
 
     def load_profiles(self):
@@ -17,13 +18,17 @@ class ProfileController:
             json.dump(self.profiles, f, ensure_ascii=False, indent=4)
 
     def set_nickname(self, user_id, nickname):
+        # Перед установкой обновляем данные из файла
+        self.profiles = self.load_profiles()
         if str(user_id) not in self.profiles:
             self.profiles[str(user_id)] = {}
         self.profiles[str(user_id)]['nickname'] = nickname
         self.save_profiles()
 
     def get_nickname(self, user_id):
-        return self.profiles.get(str(user_id), {}).get('nickname')
+        # Всегда загружаем актуальные данные
+        profiles = self.load_profiles()
+        return profiles.get(str(user_id), {}).get('nickname')
 
     def get_profile(self, user_id):
         profiles = self.load_profiles()
