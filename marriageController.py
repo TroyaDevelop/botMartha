@@ -22,17 +22,24 @@ class MarriageController:
             json.dump(marriages, file, ensure_ascii=False, indent=4)
 
     def propose_marriage(self, user_id, peer_id, reply_message=None):
+        self.marriages = self.load_marriages()
         if reply_message:
             partner_id = reply_message['from_id']
             if user_id == partner_id:
                 return 'Нельзя заключить брак с самим собой!'
-            if str(partner_id) in self.marriages.get(str(peer_id), {}):
-                return 'Этот пользователь уже состоит в браке.'
+
+            for peer, pairs in self.marriages.items():
+                for pair in pairs:
+                    if str(user_id) in pair:
+                        return f"Вы уже состоите в браке и не можете сделать предложение."
+                    if str(partner_id) in pair:
+                        return f"Пользователь уже состоит в браке и не может принять ваше предложение."
+
             self.pending_proposals[partner_id] = {'proposer': user_id, 'timestamp': time.time(), 'peer_id': peer_id}
             user_name = get_user_name(user_id)
             return f'Пользователь {user_name} предлагает вам заключить брак!💍 Ответьте "принять брак", чтобы согласиться.'
         else:
-            return 'Ответьте на сообщение пользователя, чтобы предложить брак.'
+            return 'Для заключения брака нужно ответить на сообщение пользователя, с которым вы хотите заключить брак.'
 
     def accept_marriage(self, user_id):
         if user_id in self.pending_proposals:
