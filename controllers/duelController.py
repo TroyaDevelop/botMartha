@@ -3,6 +3,8 @@ import time
 import json
 import os
 from controllers.messageController import get_user_name
+from controllers.profileController import ProfileController
+profile_controller = ProfileController()
 
 class DuelController:
     def __init__(self, player1_id, player2_id):
@@ -46,12 +48,25 @@ class DuelController:
         if str(winner_id) not in stats[str(peer_id)]:
             stats[str(peer_id)][str(winner_id)] = 0
         stats[str(peer_id)][str(winner_id)] += 1
+        profile = profile_controller.get_profile(winner_id)
+        profile['duel_wins'] = profile.get('duel_wins', 0) + 1
+        profile_controller.save_profiles()
         DuelController.save_stats(stats)
 
     @staticmethod
     def get_stats(peer_id):
         stats = DuelController.load_stats()
         return stats.get(str(peer_id), {})
+
+    @staticmethod
+    def get_duel_stats():
+        with open('data/duel_stats.json', 'r', encoding='utf-8') as file:
+            stats = json.load(file)
+        
+        # Сортировка по количеству убийств (по убыванию)
+        sorted_stats = sorted(stats.items(), key=lambda x: sum(x[1].values()), reverse=True)
+        
+        return dict(sorted_stats)
 
     @staticmethod
     def get_rank(wins):

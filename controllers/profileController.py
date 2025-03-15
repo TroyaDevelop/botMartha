@@ -24,3 +24,12 @@ class ProfileController:
 
     def get_nickname(self, user_id):
         return self.profiles.get(str(user_id), {}).get('nickname')
+
+    def get_profile(self, user_id):
+        profiles = self.load_profiles()
+        profile = profiles.get(str(user_id), {})
+        if profile:
+            nickname = profile.get('nickname', 'Не указан')
+            duel_wins = profile.get('duel_wins', 0)
+            return f"Ваш профиль:\nНикнейм: {nickname}\nУбийств в дуэлях: {duel_wins}"
+        return "Ваш профиль пока пуст."

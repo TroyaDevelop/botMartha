@@ -66,7 +66,7 @@ for event in longpoll.listen():
             response = DuelController.handle_shoot_command(peer_id, user_id)
             send_message(peer_id, response)
 
-        elif text == "дуэль стат":
+        elif text == "дуэль стата":
             stats = DuelController.get_stats(peer_id)
             if not stats:
                 response = 'Статистика дуэлей пока пуста.'
@@ -108,6 +108,10 @@ for event in longpoll.listen():
                     user1 = get_user_name(id1)
                     user2 = get_user_name(id2)
                     response += f'{user1} + {user2} (с {data["date"]})\n'
+            send_message(peer_id, response)
+
+        elif text == "мой профиль":
+            response = profile_controller.get_profile(user_id)
             send_message(peer_id, response)
 
         elif text.startswith("мне ник"):
