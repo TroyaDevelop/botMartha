@@ -5,7 +5,7 @@ from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, group_id
 from controllers.diceController import calculate_roll
-from controllers.messageController import get_random_joke, send_message, get_user_name, help_message
+from controllers.messageController import burn_command, choose_option, get_random_joke, hug_command, kiss_command, send_message, get_user_name, help_message
 from controllers.duelController import DuelController
 from controllers.marriageController import MarriageController
 from controllers.profileController import ProfileController
@@ -122,6 +122,26 @@ for event in longpoll.listen():
                 send_message(peer_id, f"Ваш никнейм изменен на '{nickname}'.")
             else:
                 send_message(peer_id, "Пожалуйста, укажите никнейм после команды 'мне ник'.")
+
+        elif text.startswith("обнять"):
+            reply_message = event.message.get('reply_message')
+            response = hug_command(user_id, reply_message)
+            send_message(peer_id, response)
+
+        elif text.startswith("поцеловать"):
+            reply_message = event.message.get('reply_message')
+            response = kiss_command(user_id, reply_message)
+            send_message(peer_id, response)
+
+        elif text.startswith("сжечь"):
+            reply_message = event.message.get('reply_message')
+            response, image_url = burn_command(user_id, reply_message)
+            send_message(peer_id, response, image_url)
+
+        elif " или " in text:
+            response = choose_option(text)
+            if response:
+                send_message(peer_id, response)
 
         else:
             #Условие если команда не найдена.
