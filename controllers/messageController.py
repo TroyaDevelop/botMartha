@@ -34,10 +34,14 @@ def send_message(peer_id: int, message: str) -> None:
 def get_user_name(user_id: int) -> str:
     nickname = profile_controller.get_nickname(user_id)
     if nickname:
-        return nickname
-    else:
-        user_info = vk.users.get(user_ids=user_id)
-        return user_info[0].get('first_name', "друг") + " " + user_info[0].get('last_name', "батькович")
+        return f"[id{user_id}|{nickname}]"
+    user_info = vk.users.get(user_ids=user_id)
+    if user_info:
+        first_name = user_info[0].get('first_name', '')
+        last_name = user_info[0].get('last_name', '')
+        full_name = f"{first_name} {last_name}".strip()
+        return f"[id{user_id}|{full_name}]"
+    return "друг"
 
 help_message = (
     "Здравствуй, авантюрист! Я помогу тебе разобраться с командами:\n\n"

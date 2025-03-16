@@ -95,7 +95,7 @@ class DuelController:
                 return 'Нельзя дуэлиться с самим собой!'
             pending_duels[opponent_id] = {'challenger': user_id, 'timestamp': time.time()}
             user_name = get_user_name(user_id)
-            return f'Пользователь {user_name} вызывает вас на дуэль! Ответьте "принять дуэль", чтобы начать.'
+            return f'Пользователь {user_name} вызывает [id{opponent_id}|вас] на дуэль! Ответьте "принять дуэль", чтобы начать.'
         else:
             return 'Ответьте на сообщение пользователя, чтобы вызвать его на дуэль.'
 
