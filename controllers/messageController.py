@@ -13,7 +13,7 @@ vk = vk_session.get_api()
 MAX_RETRIES = 10  # Количество попыток переподключения
 RETRY_DELAY = 15  # Задержка перед повторной попыткой в секундах
 
-def send_message(peer_id: int, message: str, image_url=None) -> None:
+def send_message(peer_id: int, message: str, image_url=None, gif_url=None) -> None:
     attempts = 0
     while attempts < MAX_RETRIES:
         try:
@@ -22,7 +22,7 @@ def send_message(peer_id: int, message: str, image_url=None) -> None:
                 photo = upload.photo_messages(image_url)[0]
                 attachment = f"photo{photo['owner_id']}_{photo['id']}"
                 vk.messages.send(peer_id=peer_id, message=message, attachment=attachment, random_id=0)
-            else:
+            else:     
                 vk.messages.send(peer_id=peer_id, message=message, random_id=0)
             break  # Если сообщение отправлено, выходим из цикла
         except vk_api.VkApiError as e:
@@ -36,13 +36,13 @@ def send_message(peer_id: int, message: str, image_url=None) -> None:
 def get_user_name(user_id: int) -> str:
     nickname = profile_controller.get_nickname(user_id)
     if nickname:
-        return f"[id{user_id}|{nickname}]"
+        return f"{nickname}"
     user_info = vk.users.get(user_ids=user_id)
     if user_info:
         first_name = user_info[0].get('first_name', '')
         last_name = user_info[0].get('last_name', '')
         full_name = f"{first_name} {last_name}".strip()
-        return f"[id{user_id}|{full_name}]"
+        return f"{full_name}"
     return "друг"
 
 def choose_option(text):
@@ -86,7 +86,8 @@ def kiss_command(user_id, reply_message):
 def burn_command(user_id, reply_message):
     burn_images = [
         "img/burn1.jpg",
-        "img/burn2.jpg"
+        "img/burn2.jpg",
+        "img/burn3.jpg"
     ]
     if reply_message:
         target_id = reply_message['from_id']
@@ -95,5 +96,3 @@ def burn_command(user_id, reply_message):
         return f"{user_name} сжигает {target_name} 🔥", random.choice(burn_images)
     else:
         return f"{get_user_name(user_id)} сжигает себя 🔥", random.choice(burn_images)
-
-    
