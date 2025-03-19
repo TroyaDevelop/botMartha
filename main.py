@@ -72,10 +72,13 @@ for event in longpoll.listen():
                 response = 'Статистика дуэлей пока пуста.'
             else:
                 response = 'Статистика побед в дуэлях:\n'
-                for user_id, wins in stats.items():
+                for user_id, user_stats in stats.items():
                     user_name = get_user_name(user_id)
+                    wins = user_stats["wins"]
+                    streak = user_stats["streak"]
                     rank = DuelController.get_rank(wins)
-                    response += f'{user_name}: {wins} ({rank})\n'
+                    streak_info = f" | Серия: {streak}🔥" if streak >= 1 else ""
+                    response += f'{user_name}: {wins} ({rank}){streak_info}\n'
             send_message(peer_id, response)
 
         elif text == "брак":

@@ -41,22 +41,38 @@ class DuelController:
             json.dump(stats, file, ensure_ascii=False, indent=4)
 
     @staticmethod
-    def update_stats(peer_id, winner_id):
+    def update_stats(peer_id, winner_id, loser_id):
         stats = DuelController.load_stats()
         if str(peer_id) not in stats:
             stats[str(peer_id)] = {}
         if str(winner_id) not in stats[str(peer_id)]:
-            stats[str(peer_id)][str(winner_id)] = 0
-        stats[str(peer_id)][str(winner_id)] += 1
-        # profile = profile_controller.get_profile(winner_id)
-        # profile['duel_wins'] = profile.get('duel_wins', 0) + 1
-        # profile_controller.save_profiles()
+            stats[str(peer_id)][str(winner_id)] = {"wins": 0, "streak": 0}
+        if str(loser_id) not in stats[str(peer_id)]:
+            stats[str(peer_id)][str(loser_id)] = {"wins": 0, "streak": 0}
+        
+        # Увеличиваем счетчик побед и streak для победителя
+        stats[str(peer_id)][str(winner_id)]["wins"] += 1
+        stats[str(peer_id)][str(winner_id)]["streak"] += 1
+        
+        # Сбрасываем streak проигравшего
+        stats[str(peer_id)][str(loser_id)]["streak"] = 0
+        
         DuelController.save_stats(stats)
+        return stats[str(peer_id)][str(winner_id)]["streak"]
 
     @staticmethod
     def get_stats(peer_id):
         stats = DuelController.load_stats()
-        return stats.get(str(peer_id), {})
+        peer_stats = stats.get(str(peer_id), {})
+        if peer_stats:
+            # Сортировка только по количеству побед
+            sorted_stats = sorted(
+                peer_stats.items(),
+                key=lambda x: x[1]["wins"],
+                reverse=True
+            )
+            return dict(sorted_stats)
+        return {}
 
     @staticmethod
     def get_duel_stats():
@@ -131,11 +147,13 @@ class DuelController:
             return 'Сейчас не ваш ход.'
         hit, winner = duel.shoot()
         if winner:
+            loser = duel.players[0] if winner == duel.players[1] else duel.players[1]
             del duels[duel.players[0]]
             del duels[duel.players[1]]
-            DuelController.update_stats(peer_id, winner)
+            current_streak = DuelController.update_stats(peer_id, winner, loser)
             winner_name = get_user_name(winner)
-            return f'Попадание!💥 Победитель: {winner_name}.'
+            streak_msg = f"\nСерия убийств: {current_streak}🔥" if current_streak > 1 else ""
+            return f'Попадание!💥 Победитель: {winner_name}.{streak_msg}'
         else:
             next_player_name = get_user_name(duel.get_current_player())
             return f'Промах!❌ Ход переходит к {next_player_name}.'
