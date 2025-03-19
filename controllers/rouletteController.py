@@ -16,13 +16,13 @@ class RouletteController:
             "players": [host_id],
             "timestamp": time.time()
         }
-        return f"{get_user_name(host_id)} начинает игру в русскую рулетку! Напишите 'рулетка присоединиться', чтобы участвовать. У вас есть 60 секунд."
+        return f"{get_user_name(host_id)} начинает игру в русскую рулетку! Напишите 'рулетка вступить', чтобы участвовать. У вас есть 120 секунд."
 
     def join_game(self, peer_id, user_id):
         if peer_id not in self.pending_games:
             return "Сейчас нет активного набора в игру."
         
-        if time.time() - self.pending_games[peer_id]["timestamp"] > 60:
+        if time.time() - self.pending_games[peer_id]["timestamp"] > 120:
             del self.pending_games[peer_id]
             return "Время набора игроков истекло."
 
@@ -54,7 +54,7 @@ class RouletteController:
         
         del self.pending_games[peer_id]
         players_list = [get_user_name(pid) for pid in players]
-        return f"Ваша последняя игра начинается! Порядок игроков:\n{', '.join(players_list)}\n\nРаунд 1\nПервый ход: {get_user_name(players[0])}!"
+        return f"Ваша последняя игра начинается! Для выстрела напишите 'щелчок' Порядок игроков:\n{', '.join(players_list)}\n\nРаунд 1\nПервый ход: {get_user_name(players[0])}!"
 
     def shoot(self, peer_id, user_id):
         if peer_id not in self.games:
@@ -74,7 +74,7 @@ class RouletteController:
             if len(game["alive_players"]) == 1:
                 winner = game["alive_players"][0]
                 del self.games[peer_id]
-                return (f"💥 БАХ! Мозги{get_user_name(dead_player)}размазались по стене!\n\n"
+                return (f"💥 БАХ! Мозги {get_user_name(dead_player)} размазались по стене!\n\n"
                        f"🏆 Победитель: {get_user_name(winner)}!")
             
             # Если игроков больше одного, начинаем новый раунд
@@ -84,7 +84,7 @@ class RouletteController:
             game["current_player"] = 0
             
             alive_list = [get_user_name(pid) for pid in game["alive_players"]]
-            return (f"💥 БАХ! Мозги{get_user_name(dead_player)}размазались по стене!\n\n"
+            return (f"💥 БАХ! Мозги {get_user_name(dead_player)} размазались по стене!\n\n"
                    f"Раунд {game['round']}\n"
                    f"Оставшиеся игроки: {', '.join(alive_list)}\n"
                    f"Первый ход: {get_user_name(game['alive_players'][0])}")

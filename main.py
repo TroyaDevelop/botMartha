@@ -157,7 +157,7 @@ for event in longpoll.listen():
             response = roulette_controller.start_game(peer_id, user_id)
             send_message(peer_id, response)
 
-        elif text == "рулетка присоединиться":
+        elif text == "рулетка вступить":
             response = roulette_controller.join_game(peer_id, user_id)
             send_message(peer_id, response)
 
@@ -165,7 +165,7 @@ for event in longpoll.listen():
             response = roulette_controller.start_roulette(peer_id)
             send_message(peer_id, response)
 
-        elif text == "рулетка выстрел":
+        elif text == "щелчок":
             response = roulette_controller.shoot(peer_id, user_id)
             send_message(peer_id, response)
 
