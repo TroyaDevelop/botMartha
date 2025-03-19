@@ -58,6 +58,12 @@ help_message = (
     "Анекдот -  вызывает анекдот.\n"
     "Брак -  предлагает заключить брак с другим пользователем.\n"
     "Для помощи с бросками кубиков напиши '/помощь'.\n"
+    
+    "РУССКАЯ РУЛЕТКА"
+    "рулетка - начинает игру в русскую рулетку.\n"
+    "Рулетка присоединиться - присоединяет к игре в русскую рулетку.\n"
+    "Рулетка начать - запускает игру в русскую рулетку.\n"
+    "Рулетка выстрел - делает выстрел в русской рулетке.\n"
 )
 
 def get_random_joke():
@@ -96,3 +102,21 @@ def burn_command(user_id, reply_message):
         return f"{user_name} сжигает {target_name} 🔥", random.choice(burn_images)
     else:
         return f"{get_user_name(user_id)} сжигает себя 🔥", random.choice(burn_images)
+
+def bonk_command(user_id, reply_message):
+    if reply_message:
+        target_id = reply_message['from_id']
+        user_name = get_user_name(user_id)
+        target_name = get_user_name(target_id)
+        return f"{user_name} бонькает {target_name}🔨"
+    else:
+        return f"{get_user_name(user_id)} бонькает себя🔨"
+
+def slap_command(user_id, reply_message):
+    if reply_message:
+        target_id = reply_message['from_id']
+        user_name = get_user_name(user_id)
+        target_name = get_user_name(target_id)
+        return f"{user_name} шлёпает {target_name} 😏"
+    else:
+        return f"{get_user_name(user_id)} шлёпает себя 😏"

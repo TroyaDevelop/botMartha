@@ -5,10 +5,11 @@ from vk_api.bot_longpoll import VkBotEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from config import token, group_id
 from controllers.diceController import calculate_roll
-from controllers.messageController import burn_command, choose_option, get_random_joke, hug_command, kiss_command, send_message, get_user_name, help_message
+from controllers.messageController import burn_command, choose_option, get_random_joke, hug_command, kiss_command, bonk_command, slap_command, send_message, get_user_name, help_message
 from controllers.duelController import DuelController
 from controllers.marriageController import MarriageController
 from controllers.profileController import ProfileController
+from controllers.rouletteController import RouletteController
 
 # Создание сессии VK
 vk_session = vk_api.VkApi(token=token)
@@ -17,6 +18,7 @@ vk = vk_session.get_api()
 duels = {}
 marriage_controller = MarriageController()
 profile_controller = ProfileController()
+roulette_controller = RouletteController()
 
 # Обработка событий от пользователей
 for event in longpoll.listen():
@@ -140,6 +142,32 @@ for event in longpoll.listen():
             reply_message = event.message.get('reply_message')
             response, image_url = burn_command(user_id, reply_message)
             send_message(peer_id, response, image_url)
+
+        elif text.startswith("шлёпнуть") or text.startswith("шлепнуть"):
+            reply_message = event.message.get('reply_message')
+            response = slap_command(user_id, reply_message)
+            send_message(peer_id, response)
+
+        elif text.startswith("боньк"):
+            reply_message = event.message.get('reply_message')
+            response = bonk_command(user_id, reply_message)
+            send_message(peer_id, response)
+
+        elif text == "рулетка":
+            response = roulette_controller.start_game(peer_id, user_id)
+            send_message(peer_id, response)
+
+        elif text == "рулетка присоединиться":
+            response = roulette_controller.join_game(peer_id, user_id)
+            send_message(peer_id, response)
+
+        elif text == "рулетка начать":
+            response = roulette_controller.start_roulette(peer_id)
+            send_message(peer_id, response)
+
+        elif text == "рулетка выстрел":
+            response = roulette_controller.shoot(peer_id, user_id)
+            send_message(peer_id, response)
 
         elif " или " in text:
             response = choose_option(text)
