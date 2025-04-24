@@ -46,10 +46,16 @@ def get_user_name(user_id: int) -> str:
     return "друг"
 
 def choose_option(text):
-    if " или " in text:
-        options = text.split(" или ")
-        if len(options) >= 2:
-            return random.choice(options)
+    # Проверяем, что текст начинается со слова "марта" и содержит "или"
+    text_lower = text.lower().strip()
+    if " или " in text_lower and text_lower.startswith("марта"):
+        # Удаляем слово "марта" из начала текста
+        clean_text = text_lower[5:].strip()  # 5 - длина слова "марта"
+        options = [opt.strip() for opt in clean_text.split(" или ")]
+        # Фильтруем пустые варианты и выбираем среди непустых
+        valid_options = [opt for opt in options if opt]
+        if len(valid_options) >= 2:
+            return random.choice(valid_options)
     return None
 
 help_message = (

@@ -31,6 +31,13 @@ for event in longpoll.listen():
 
         user_name = get_user_name(user_id)  # Получаем имя пользователя дальнейшего использования
 
+        # Проверяем команду выбора "или" перед другими командами
+        if " или " in text:
+            response = choose_option(text)
+            if response:
+                send_message(peer_id, response)
+                continue  # Переходим к следующему сообщению
+
         if "марта" in text:
             roll_command = text.split("марта", 1)[1].strip()  # Убираем лишние пробелы
             result = calculate_roll(user_name, roll_command)
@@ -168,11 +175,6 @@ for event in longpoll.listen():
         elif text == "щелчок":
             response = roulette_controller.shoot(peer_id, user_id)
             send_message(peer_id, response)
-
-        elif " или " in text:
-            response = choose_option(text)
-            if response:
-                send_message(peer_id, response)
 
         else:
             #Условие если команда не найдена.
