@@ -1,181 +1,204 @@
 from tokenize import group
 from typing import Dict, Any
 import vk_api
-from vk_api.bot_longpoll import VkBotEventType
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 from config import token, group_id
 from controllers.diceController import calculate_roll
-from controllers.messageController import burn_command, choose_option, get_random_joke, hug_command, kiss_command, bonk_command, slap_command, send_message, get_user_name, help_message
+from controllers.messageController import (
+    burn_command,
+    devour_command,  # NEW
+    choose_option,
+    get_random_joke,
+    hug_command,
+    kiss_command,
+    bonk_command,
+    slap_command,
+    send_message,
+    get_user_name,
+    help_message,
+)
 from controllers.duelController import DuelController
 from controllers.marriageController import MarriageController
 from controllers.profileController import ProfileController
 from controllers.rouletteController import RouletteController
 
-# Создание сессии VK
+# --- VK init ---
 vk_session = vk_api.VkApi(token=token)
 longpoll = VkBotLongPoll(vk_session, group_id=group_id, wait=60)
 vk = vk_session.get_api()
-duels = {}
+
 marriage_controller = MarriageController()
 profile_controller = ProfileController()
 roulette_controller = RouletteController()
 
-# Обработка событий от пользователей
+# ---------------- Main loop -----------------
 for event in longpoll.listen():
-    if event.type == VkBotEventType.MESSAGE_NEW:
-        # Получаем текст сообщения, peer_id и user_id
-        message = event.obj.message
-        text = message["text"].lower().strip()
-        peer_id = message["peer_id"]
-        user_id = message["from_id"]
+    if event.type != VkBotEventType.MESSAGE_NEW:
+        continue
 
-        user_name = get_user_name(user_id)  # Получаем имя пользователя дальнейшего использования
+    # -------- Парсинг входного сообщения --------
+    message = event.obj.message
+    original_text = message["text"].strip()
+    text = original_text.lower()
 
-        # Проверяем команду выбора "или" перед другими командами
-        if " или " in text:
-            response = choose_option(text)
-            if response:
-                send_message(peer_id, response)
-                continue  # Переходим к следующему сообщению
+    peer_id = message["peer_id"]
+    user_id = message["from_id"]
 
-        if "марта" in text:
-            roll_command = text.split("марта", 1)[1].strip()  # Убираем лишние пробелы
-            result = calculate_roll(user_name, roll_command)
-            send_message(peer_id, result)
-        elif "/" in text:
-            roll_command = text.split("/", 1)[1].strip()  # Убираем лишние пробелы
-            result = calculate_roll(user_name, roll_command)
-            send_message(peer_id, result)
+    user_name = get_user_name(user_id)
 
-        # Обработка команд от пользователя, если он не в процессе создания персонажа
-        elif text == "привет":
-            send_message(peer_id, f"Здравствуйте, {user_name}! Чем могу помочь?")
-
-        elif text == "пока":
-            send_message(peer_id, f"Удачи вам, {user_name}!")
-
-        elif text == "помощь":
-            send_message(peer_id, help_message)
-
-        elif text == "анекдот":
-            send_message(peer_id, get_random_joke())
-
-        elif text == "дуэль":
-            if message.get('reply_message'):
-                response = DuelController.handle_duel_command(user_id, message['reply_message'])
-            else:
-                response = DuelController.handle_duel_command(user_id)
+    # --- Выбор "или" ---
+    if " или " in text:
+        response = choose_option(text)
+        if response:
             send_message(peer_id, response)
+            continue
 
-        elif text == "принять дуэль":
-            response = DuelController.handle_accept_duel(user_id)
-            send_message(peer_id, response)
+    # ===== Кубы =====
+    if "марта" in text:
+        roll_command = text.split("марта", 1)[1].strip()
+        send_message(peer_id, calculate_roll(user_name, roll_command))
+        continue
+    elif "/" in text:
+        roll_command = text.split("/", 1)[1].strip()
+        send_message(peer_id, calculate_roll(user_name, roll_command))
+        continue
 
-        elif text == "выстрел":
-            response = DuelController.handle_shoot_command(peer_id, user_id)
-            send_message(peer_id, response)
+    # ===== Общие фразы =====
+    if text == "привет":
+        send_message(peer_id, f"Здравствуйте, {user_name}! Чем могу помочь?")
+        continue
+    if text == "пока":
+        send_message(peer_id, f"Удачи вам, {user_name}!")
+        continue
+    if text == "помощь":
+        send_message(peer_id, help_message)
+        continue
+    if text == "анекдот":
+        send_message(peer_id, get_random_joke())
+        continue
 
-        elif text == "дуэль стата":
-            stats = DuelController.get_stats(peer_id)
-            if not stats:
-                response = 'Статистика дуэлей пока пуста.'
-            else:
-                response = 'Статистика побед в дуэлях:\n'
-                for user_id, user_stats in stats.items():
-                    user_name = get_user_name(user_id)
-                    wins = user_stats["wins"]
-                    streak = user_stats["streak"]
-                    rank = DuelController.get_rank(wins)
-                    streak_info = f" | Серия: {streak}🔥" if streak >= 1 else ""
-                    response += f'{user_name}: {wins} ({rank}){streak_info}\n'
-            send_message(peer_id, response)
-
-        elif text == "брак":
-            if message.get('reply_message'):
-                response = marriage_controller.propose_marriage(user_id, peer_id, message['reply_message'])
-            else:
-                response = marriage_controller.propose_marriage(user_id, peer_id)
-            send_message(peer_id, response)
-
-        elif text == "принять брак":
-            response = marriage_controller.accept_marriage(user_id)
-            send_message(peer_id, response)
-
-        elif text == "развод":
-            response = marriage_controller.divorce(user_id, peer_id)
-            send_message(peer_id, response)
-
-        elif text == "подтвердить развод":
-            response = marriage_controller.confirm_divorce(user_id)
-            send_message(peer_id, response)
-
-        elif text == "браки":
-            marriages = marriage_controller.get_marriages(peer_id)
-            if not marriages:
-                response = 'В нашей гильдии пока никто не в браке!'
-            else:
-                response = 'Список браков:\n'
-                for pair, data in marriages.items():
-                    id1, id2 = eval(pair)
-                    user1 = get_user_name(id1)
-                    user2 = get_user_name(id2)
-                    response += f'{user1} + {user2} (с {data["date"]})\n'
-            send_message(peer_id, response)
-
-        # elif text == "мой профиль":
-        #     response = profile_controller.get_profile(user_id)
-        #     send_message(peer_id, response)
-
-        elif text.startswith("мне ник"):
-            nickname = text.split("мне ник", 1)[1].strip()
-            if nickname:
-                nickname = nickname[0].upper() + nickname[1:]
-                profile_controller.set_nickname(user_id, nickname)
-                send_message(peer_id, f"Ваш никнейм изменен на '{nickname}'.")
-            else:
-                send_message(peer_id, "Пожалуйста, укажите никнейм после команды 'мне ник'.")
-
-        elif text.startswith("обнять"):
-            reply_message = event.message.get('reply_message')
-            response = hug_command(user_id, reply_message)
-            send_message(peer_id, response)
-
-        elif text.startswith("поцеловать"):
-            reply_message = event.message.get('reply_message')
-            response = kiss_command(user_id, reply_message)
-            send_message(peer_id, response)
-
-        elif text.startswith("сжечь"):
-            reply_message = event.message.get('reply_message')
-            response, image_url = burn_command(user_id, reply_message)
-            send_message(peer_id, response, image_url)
-
-        elif text.startswith("шлёпнуть") or text.startswith("шлепнуть"):
-            reply_message = event.message.get('reply_message')
-            response = slap_command(user_id, reply_message)
-            send_message(peer_id, response)
-
-        elif text.startswith("боньк"):
-            reply_message = event.message.get('reply_message')
-            response = bonk_command(user_id, reply_message)
-            send_message(peer_id, response)
-
-        elif text == "рулетка":
-            response = roulette_controller.start_game(peer_id, user_id)
-            send_message(peer_id, response)
-
-        elif text == "рулетка вступить":
-            response = roulette_controller.join_game(peer_id, user_id)
-            send_message(peer_id, response)
-
-        elif text == "рулетка начать":
-            response = roulette_controller.start_roulette(peer_id)
-            send_message(peer_id, response)
-
-        elif text == "щелчок":
-            response = roulette_controller.shoot(peer_id, user_id)
-            send_message(peer_id, response)
-
+    # ===== Дуэли =====
+    if text == "дуэль":
+        if message.get('reply_message'):
+            response = DuelController.handle_duel_command(user_id, message['reply_message'])
         else:
-            #Условие если команда не найдена.
-            pass
+            response = DuelController.handle_duel_command(user_id)
+        send_message(peer_id, response)
+        continue
+
+    if text == "принять дуэль":
+        send_message(peer_id, DuelController.handle_accept_duel(user_id))
+        continue
+
+    if text == "выстрел":
+        send_message(peer_id, DuelController.handle_shoot_command(peer_id, user_id))
+        continue
+
+    if text == "дуэль стата":
+        stats = DuelController.get_stats(peer_id)
+        if not stats:
+            send_message(peer_id, 'Статистика дуэлей пока пуста.')
+        else:
+            response = 'Статистика побед в дуэлях:\n'
+            for uid, user_stats in stats.items():
+                uname = get_user_name(uid)
+                wins = user_stats["wins"]
+                streak = user_stats["streak"]
+                rank = DuelController.get_rank(wins)
+                streak_info = f" | Серия: {streak}🔥" if streak >= 1 else ""
+                response += f'{uname}: {wins} ({rank}){streak_info}\n'
+            send_message(peer_id, response)
+        continue
+
+    # ===== Брак =====
+    if text == "брак":
+        if message.get('reply_message'):
+            response = marriage_controller.propose_marriage(user_id, peer_id, message['reply_message'])
+        else:
+            response = marriage_controller.propose_marriage(user_id, peer_id)
+        send_message(peer_id, response)
+        continue
+
+    if text == "принять брак":
+        send_message(peer_id, marriage_controller.accept_marriage(user_id))
+        continue
+
+    if text == "развод":
+        send_message(peer_id, marriage_controller.divorce(user_id, peer_id))
+        continue
+
+    if text == "подтвердить развод":
+        send_message(peer_id, marriage_controller.confirm_divorce(user_id))
+        continue
+
+    if text == "браки":
+        marriages = marriage_controller.get_marriages(peer_id)
+        if not marriages:
+            response = 'В нашей гильдии пока никто не в браке!'
+        else:
+            response = 'Список браков:\n'
+            for pair, data in marriages.items():
+                id1, id2 = eval(pair)
+                response += f"{get_user_name(id1)} + {get_user_name(id2)} (с {data['date']})\n"
+        send_message(peer_id, response)
+        continue
+
+    # ===== Профиль =====
+    if text.startswith("мне ник"):
+        nickname = original_text[len("мне ник"):].strip()
+        if nickname:
+            profile_controller.set_nickname(user_id, nickname)
+            send_message(peer_id, f"Ваш никнейм изменён на '{nickname}'.")
+        else:
+            send_message(peer_id, "Пожалуйста, укажите никнейм после команды 'мне ник'.")
+        continue
+
+    # ===== Эмоции =====
+    if text.startswith("обнять"):
+        reply_msg = event.message.get('reply_message')
+        send_message(peer_id, hug_command(user_id, reply_msg))
+        continue
+
+    if text.startswith("поцеловать"):
+        reply_msg = event.message.get('reply_message')
+        send_message(peer_id, kiss_command(user_id, reply_msg))
+        continue
+
+    if text.startswith("сжечь"):
+        reply_msg = event.message.get('reply_message')
+        resp, img_path = burn_command(user_id, reply_msg)
+        send_message(peer_id, resp, image_path=img_path)  # FIX: keyword arg
+        continue
+
+    if text.startswith("сожрать"):
+        reply_msg = event.message.get('reply_message')
+        resp, doc_path = devour_command(user_id, reply_msg)
+        send_message(peer_id, resp, doc_path=doc_path)
+        continue
+
+    if text.startswith("шлёпнуть") or text.startswith("шлепнуть"):
+        reply_msg = event.message.get('reply_message')
+        send_message(peer_id, slap_command(user_id, reply_msg))
+        continue
+
+    if text.startswith("боньк"):
+        reply_msg = event.message.get('reply_message')
+        send_message(peer_id, bonk_command(user_id, reply_msg))
+        continue
+
+    # ===== Рулетка =====
+    if text == "рулетка":
+        send_message(peer_id, roulette_controller.start_game(peer_id, user_id))
+        continue
+
+    if text == "рулетка вступить":
+        send_message(peer_id, roulette_controller.join_game(peer_id, user_id))
+        continue
+
+    if text == "рулетка начать":
+        send_message(peer_id, roulette_controller.start_roulette(peer_id))
+        continue
+
+    if text == "щелчок":
+        send_message(peer_id, roulette_controller.shoot(peer_id, user_id))
+        continue
