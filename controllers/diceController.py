@@ -1,126 +1,146 @@
 import random
 import re
+from typing import List, Dict, Set, Optional
 
-# Ограничения на количество кубиков и граней
-MAX_DICE_COUNT = 250
-MAX_DICE_SIDES = 100
+# ====== Глобальные настройки ======
+MAX_DICE_COUNT = 250      # максимальное число одновременно бросаемых кубиков
+MAX_DICE_SIDES = 1000      # максимальное число граней у кубика
+BIAS_EXPONENT  = 0.8      # < 1.0 — чаще высокие значения, > 1.0 — чаще низкие
 
-# Эмодзи для критических бросков 20-гранных кубиков и модификатора
-CRIT_FAIL_EMOJI = "☠️"
+CRIT_FAIL_EMOJI    = "☠️"
 CRIT_SUCCESS_EMOJI = "💥"
-GEAR_EMOJI = "⚙️"
+GEAR_EMOJI         = "⚙️"
 
+# Критические диапазоны: ключ = граней, значения = множества «success»/«fail»
+CRITICAL_RANGES: Dict[int, Dict[str, Set[int]]] = {
+    20: {"success": {20}, "fail": {1}},
+    16: {"success": {16}},
+    12: {"success": {12}},
+    10: {"success": {10}},
+     8: {"success": {8}},
+     6: {"success": {6},  "fail": {1}},
+}
+
+# ====== Справка ======
 dice_help_message = (
     "Здравствуй, авантюрист! Я помогу тебе разобраться с системой бросков кубиков:\n\n"
-    "🎲 Основные команды для бросков кубиков:\n"
-    "- /д20 — бросить один 20-гранный кубик.\n"
-    "- /3д6 — бросить три 6-гранных кубика и показать сумму.\n"
-    "- /д20+5 — бросить один 20-гранный кубик и добавить модификатор +5.\n\n"
-    "📋 Примеры команд:\n"
-    "- /д20 — обычный бросок 20-гранного кубика.\n"
-    "- /2д10+3 — бросить два 10-гранных кубика и добавить модификатор +3.\n\n"
-    "Напиши 'помощь', если тебе снова понадобится эта инструкция. Удачи в бросках! 🎲"
+    "🎲 Команды бросков:\n"
+    "- /д20 — бросить один 20‑гранный кубик.\n"
+    "- /3д6 — бросить три 6‑гранных кубика и показать сумму.\n"
+    "- /д20+5 — бросить один 20‑гранный кубик и добавить модификатор +5.\n"
+    "- /д20^ — бросок с преимуществом (лучший из двух d20).\n"
+    "- /д20_ — бросок с помехой (худший из двух d20).\n\n"
+    "Криты: 💥 при значениях из таблицы крит‑успехов, ☠️ — крит‑провал.\n"
+    "Напиши 'помощь', если понадобится эта инструкция ещё раз. Удачи в бросках! 🎲"
 )
 
-def biased_roll(sides: int, exponent: float = 0.8) -> int:
-    """
-    Функция смещенного броска кубика.
-    При exponent < 1 увеличивается шанс выпадения высоких значений.
-    Изменена формула, чтобы при максимально возможном значении r выпадает sides.
-    """
-    r = random.random()  # равномерное число от 0 до 1
-    return int(sides * (r ** exponent)) + 1
+# ====== Вспомогательные функции ======
 
-def roll_dice(sides: int, rolls: int = 1) -> list[int]:
+def biased_roll(
+    sides: int,
+    exponent: float = BIAS_EXPONENT,
+    rng: Optional[random.Random] = None,
+) -> int:
+    """Возвращает *одно* значение кубика c управляемым смещением.
+
+    Параметр *exponent* контролирует кривизну распределения:
+        • **1.0**  — равномерная вероятность (стандартный куб).
+        • **< 1.0** — увеличивает шанс *высоких* чисел (0.8 ≈ +10 % к старшим граням).
+        • **> 1.0** — увеличивает шанс *низких* чисел (1.2 ≈ +10 % к младшим граням).
+
+    Можно передать собственный RNG (например, :class:`random.SystemRandom`) —
+    это облегчает юнит‑тестирование и позволяет, при желании, использовать
+    криптографически стойкий генератор.
     """
-    Использует biased_roll вместо random.randint для смещения вероятности к большим числам.
-    """
-    return [biased_roll(sides) for _ in range(rolls)]
+    if sides < 2:
+        raise ValueError("sides must be ≥ 2")
+    if exponent <= 0:
+        raise ValueError("exponent must be > 0")
+
+    rng = rng or random
+    u = rng.random()              # 0 ≤ u < 1
+    v = u ** exponent             # степенное преобразование
+    result = int(v * sides) + 1   # 1 … sides (включительно)
+    return min(result, sides)     # защита от округления «sides + 1»
+
+
+def roll_dice(
+    sides: int,
+    rolls: int = 1,
+    exponent: float = BIAS_EXPONENT,
+    rng: Optional[random.Random] = None,
+) -> List[int]:
+    """Бросает *rolls* раз кубик на *sides* граней с тем же смещением."""
+    return [biased_roll(sides, exponent, rng) for _ in range(rolls)]
+
+
+def _crit_emoji(roll: int, sides: int) -> str:
+    """Возвращает строку с эмодзи крит‑успеха/провала (если применимо)."""
+    cfg = CRITICAL_RANGES.get(sides, {})
+    if roll in cfg.get("fail", set()) or (roll == 1 and sides not in cfg.get("success", set())):
+        return f" {CRIT_FAIL_EMOJI}"
+    if roll in cfg.get("success", set()):
+        return f" {CRIT_SUCCESS_EMOJI}"
+    return ""
+
+# ====== Основной контроллер ======
 
 def calculate_roll(nickname: str, command: str) -> str:
-    # Нормализуем команду: заменяем альтернативные символы на стандартный "д"
-    normalized_command = command.replace("к", "д").replace("d", "д")
-    lines = normalized_command.splitlines()
-    results = []
-    display_name = nickname
+    """Разбирает текст *command* и возвращает результат броска кубиков."""
+    normalized = command.replace("к", "д").replace("d", "д").strip()
+    if not normalized:
+        return f"Да, {nickname}?"
 
-    if not lines:
-        return f"Да, {display_name}?"
-
-    # Если команда /помощь, возвращаем инструкцию
-    if '/помощь' in normalized_command.lower() or 'помощь' in normalized_command.lower():
+    low = normalized.lower()
+    if "/помощь" in low or "помощь" in low:
         return dice_help_message
-    elif 'поцелуй' in normalized_command.lower():
-        return f"😘"
+    if "поцелуй" in low:
+        return "😘"
 
-    # Регулярное выражение для парсинга команды броска кубиков.
-    dice_pattern = re.compile(r'(?P<count>\d*)д(?P<sides>\d+)((?P<modifiers>([+-]\d+)+))?')
-    modifier_pattern = re.compile(r'([+-]\d+)')
+    #  /2д6+3      /д20^     /4д8_-1
+    dice_re = re.compile(
+        r"(?P<count>\d*)д(?P<sides>\d+)(?P<adv>[\^_]?)"
+        r"((?P<modifiers>([+-]\d+)+))?"
+    )
+    mod_re = re.compile(r"([+-]\d+)")
 
-    # Ищем все команды бросков кубиков в тексте
-    matches = dice_pattern.finditer(normalized_command)
+    out_lines: List[str] = []
 
-    for match in matches:
-        # Определяем количество кубиков (если не указано, то 1)
-        count_str = match.group('count')
-        dice_count = int(count_str) if count_str.isdigit() else 1
+    for m in dice_re.finditer(normalized):
+        dice_count = int(m.group("count") or "1")
+        dice_sides = int(m.group("sides"))
+        adv_flag   = m.group("adv")
 
-        # Количество граней кубика
-        dice_sides = int(match.group('sides'))
-
-        # Обрабатываем модификаторы (например, +5 или -1)
-        modifiers_str = match.group('modifiers') or ""
-        modifier_values = modifier_pattern.findall(modifiers_str)
-
-        # Суммируем все модификаторы (положительные и отрицательные)
-        total_modifiers = sum(int(mod) for mod in modifier_values)
-
-        # Суммируем одинаковые модификаторы (например, два `-4` должны быть `-8`)
-        simplified_modifiers = {}
-        for mod in modifier_values:
-            if mod in simplified_modifiers:
-                simplified_modifiers[mod] += 1
-            else:
-                simplified_modifiers[mod] = 1
-
-        # Формируем строку для модификаторов
-        modifier_display = ""
-        for mod, count in simplified_modifiers.items():
-            if mod.startswith("+"):
-                modifier_display += f" + {int(mod[1:]) * count} {GEAR_EMOJI}"
-            elif mod.startswith("-"):
-                modifier_display += f" - {int(mod[1:]) * count} {GEAR_EMOJI}"
-
-        if dice_count > MAX_DICE_COUNT or dice_sides > MAX_DICE_SIDES or dice_sides <= 0:
-            results.append(f"Слишком много кубиков или граней, {display_name}.")
+        # ---- Валидация ----
+        if dice_count > MAX_DICE_COUNT or dice_sides > MAX_DICE_SIDES or dice_sides < 2:
+            out_lines.append(f"Слишком много кубиков или граней, {nickname}.")
+            continue
+        if adv_flag and dice_count != 1:
+            out_lines.append(f"Advantage/Disadvantage допустимы только для одного кубика, {nickname}.")
             continue
 
-        roll_results = roll_dice(dice_sides, dice_count)
-        total = sum(roll_results) + total_modifiers
+        # ---- Модификаторы ----
+        mods_str  = m.group("modifiers") or ""
+        mod_vals  = [int(x) for x in mod_re.findall(mods_str)]
+        total_mod = sum(mod_vals)
+        mod_disp  = f" {'+' if total_mod>=0 else '-'} {abs(total_mod)} {GEAR_EMOJI}" if mods_str else ""
 
-        # Если сумма результата и модификаторов <= 0, выводим "Выпала 1"
-        if total <= 0:
-            roll_detail = " + ".join([str(roll) for roll in roll_results])  # Добавляем подробности о броске
-            results.append(f"{display_name}, выпала 1. ({roll_detail}{modifier_display})")
+        # ---- Бросок ----
+        if adv_flag:
+            pair    = roll_dice(dice_sides, 2)
+            chosen  = max(pair) if adv_flag == "^" else min(pair)
+            total   = chosen + total_mod
+            detail  = f"{pair[0]} / {pair[1]} → {chosen}{_crit_emoji(chosen, dice_sides)}{mod_disp}"
+            out_lines.append(f"{nickname}, итог: {total}. ({detail})")
             continue
 
-        # Формируем детализированный вывод для каждого кубика
-        detailed_rolls = []
-        for roll in roll_results:
-            if roll == 1:
-                detailed_rolls.append(f"{roll}{CRIT_FAIL_EMOJI}")
-            elif roll == 20 and dice_sides == 20:
-                detailed_rolls.append(f"{roll}{CRIT_SUCCESS_EMOJI}")
-            else:
-                detailed_rolls.append(str(roll))
+        # Обычный бросок / несколько кубов
+        rolls  = roll_dice(dice_sides, dice_count)
+        total  = sum(rolls) + total_mod
+        detailed = " + ".join(f"{r}{_crit_emoji(r, dice_sides)}" for r in rolls)
+        out_lines.append(f"{nickname}, итог: {total}. ({detailed}{mod_disp})")
 
-        # Выводим итоговый результат всех кубиков
-        roll_detail = " + ".join(detailed_rolls)
-        results.append(f"{display_name}, итог: {total}. ({roll_detail}{modifier_display})")
+    if not out_lines:
+        return f"{nickname}, в твоём сообщении не найдено команды для броска."
 
-    # Если команды не найдены, выводим ошибку
-    if not results:
-        return f"{display_name}, в твоём сообщении не найдено команды для броска."
-
-    return "\n".join(results)
-
+    return "\n".join(out_lines)
