@@ -2,7 +2,7 @@ import random
 import time
 from controllers.messageController import get_user_name
 
-class LottoController:
+class BingoController:
     def __init__(self):
         self.games = {}  # {peer_id: {host_id: id, players: {user_id: card}, drawn_numbers: [], current_game: bool}}
         self.pending_games = {}  # {peer_id: {host_id: id, players: [], timestamp: float}}
@@ -47,7 +47,7 @@ class LottoController:
                f"👥 Текущие игроки ({len(players_list)}): {', '.join(players_list)}\n" \
                f"🎯 Ведущий может написать 'лото начать' для начала игры"
 
-    def start_lotto(self, peer_id, user_id):
+    def start_bingo(self, peer_id, user_id):
         """Запуск игры в лото (только ведущий может запустить)"""
         if peer_id not in self.pending_games:
             return "❌ Нет активного лобби для начала игры."
@@ -64,7 +64,7 @@ class LottoController:
         player_cards = {}
         
         for player_id in players:
-            player_cards[player_id] = self._generate_lotto_card()
+            player_cards[player_id] = self._generate_bingo_card()
         
         # Создаем игру
         self.games[peer_id] = {
@@ -178,7 +178,7 @@ class LottoController:
         del self.games[peer_id]
         return "🎮 Игра в лото завершена ведущим."
 
-    def _generate_lotto_card(self):
+    def _generate_bingo_card(self):
         """Генерация карточки лото 3x9 с числами от 1 до 90"""
         card = [[0 for _ in range(9)] for _ in range(3)]
         
